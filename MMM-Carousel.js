@@ -81,14 +81,14 @@ Module.register("MMM-Carousel", {
 		if (notification === 'DOM_OBJECTS_CREATED') {
 			MM.getModules().exceptModule(self).enumerate(function(module) {
 				name = module.name;
-				if ((name!=="clock")&&(name!=="alert")&&(name!=="updatenotification")&&(name!=="RandomPhoto")) {
+				if ((name!=="clock")&&(name!=="alert")&&(name!=="updatenotification")&&(name!=="MMM-RandomPhoto")) {
 					module.hide(0, {lockString: "Carousel"});
 				}
 			});
 		} else if (notification === "GO_TO_SLEEP") {
 			self.sleep = true;
 			MM.getModules().exceptModule(self).enumerate(function(module) {
-				if ((module.name !== "CarouselSleep")&&(module.name!=="MMM-Touch")) {
+				if ((module.name !== "MMM-CarouselSleep")&&(module.name!=="MMM-Touch")) {
 					module.hide(self.config.sleepTransitionTime, {lockString: "Carousel"});
 				}
 			});
@@ -96,7 +96,7 @@ Module.register("MMM-Carousel", {
 		} else if ((notification === "WAKE_UP")&&(self.sleep === true)) {
 			MM.getModules().exceptModule(self).enumerate(function(module) {
 				name = module.name;
-				if ((name==="clock")||(name==="alert")||(name==="updatenotification")||(name==="RandomPhoto")) {
+				if ((name==="clock")||(name==="alert")||(name==="updatenotification")||(name==="MMM-RandomPhoto")) {
 					module.show(self.config.wakeTransitionTime, {lockString: "Carousel"});
 				}
 			});
