@@ -1,4 +1,4 @@
-Module.register("Carousel", {
+Module.register("MMM-Carousel", {
 	defaults: {
 		moduleInterval: 15,		// In seconds.
 		transitionTime: 200,		// In milliseconds.
