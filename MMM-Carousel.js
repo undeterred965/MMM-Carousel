@@ -93,6 +93,7 @@ Module.register("MMM-Carousel", {
 				}
 			});
 			Log.info("Going to Sleep says Carousel.");
+			setTimeout(function() {self.sendSocketNotification("TURN_DISPLAY_OFF");},self.config.sleepTransitionTime+2000);
 		} else if ((notification === "WAKE_UP")&&(self.sleep === true)) {
 			MM.getModules().exceptModule(self).enumerate(function(module) {
 				name = module.name;
@@ -101,6 +102,7 @@ Module.register("MMM-Carousel", {
 				}
 			});
 			self.sleep = false;
+			self.sendSocketNotification("TURN_DISPLAY_ON");
 			Log.info("Waking up says Carousel.");
 			self.start();
 		} else if ((notification === "WAKE_UP")&&(self.sleep === false)) {
