@@ -4,6 +4,7 @@ Module.register("MMM-Carousel", {
 		transitionTime: 200,		// In milliseconds.
 		sleepTransitionTime: 5000,	// In milliseconds.
 		wakeTransitionTime: 750,	// In milliseconds.
+		modulesBeforeSleep: 80,		//  Number of modules to be displayed before sleeping.
 	},
 
 	getHeader: function() {},
@@ -16,19 +17,15 @@ Module.register("MMM-Carousel", {
 
 	start: function() {
 		var self = this;
-		self.sleep = false;
-		self.cancelOneTimer = false;
+		self.wakeRotations = 0;
+		self.sleeping = false;
 		self.currentModule = "clock";
 		setTimeout(function() {self.rotateLoop();},self.config.moduleInterval*1000);
 	},
 
 	rotateLoop: function() {
 		var self = this;
-		if (self.sleep === true) return;
-		if (self.cancelOneTimer === true) {
-			self.cancelOneTimer = false;
-			return;
-		}
+		if (self.sleeping === true) return;
 		var oldModule = self.currentModule;
 		var newModule = "";
 		switch (oldModule) {
@@ -50,11 +47,24 @@ Module.register("MMM-Carousel", {
 		}
 		self.hideShowModules(oldModule,newModule);
 		self.currentModule = newModule;
-		if (self.sleep === true) {
-			return;
+		self.wakeRotations += 1;
+		if (self.wakeRotations === self.config.modulesBeforeSleep) {
+			self.sleepCarousel();
 		} else {
 			setTimeout(function() {self.rotateLoop();},self.config.moduleInterval*1000);
 		}
+	},
+	
+	sleepCarousel: function() {
+		var self = this;
+		self.sleeping = true;
+		MM.getModules().exceptModule(self).enumerate(function(module) {
+			if (module.name !== "MMM-Touch") {
+				module.hide(self.config.sleepTransitionTime, {lockString: "Carousel"});
+			}
+		});
+		Log.info("Going to Sleep says Carousel.");
+		setTimeout(function() {self.sendSocketNotification("TURN_DISPLAY_OFF");},self.config.sleepTransitionTime+2000);
 	},
 
 	hideShowModules: function(moduleToHide, moduleToShow) {
@@ -85,33 +95,24 @@ Module.register("MMM-Carousel", {
 					module.hide(0, {lockString: "Carousel"});
 				}
 			});
-		} else if (notification === "GO_TO_SLEEP") {
-			self.sleep = true;
-			MM.getModules().exceptModule(self).enumerate(function(module) {
-				if ((module.name !== "MMM-CarouselSleep")&&(module.name!=="MMM-Touch")) {
-					module.hide(self.config.sleepTransitionTime, {lockString: "Carousel"});
-				}
-			});
-			Log.info("Going to Sleep says Carousel.");
-			setTimeout(function() {self.sendSocketNotification("TURN_DISPLAY_OFF");},self.config.sleepTransitionTime+2000);
-		} else if ((notification === "WAKE_UP")&&(self.sleep === true)) {
+		} else if ((notification === "WAKE_UP")&&(self.sleeping === true)) {
 			MM.getModules().exceptModule(self).enumerate(function(module) {
 				name = module.name;
 				if ((name==="clock")||(name==="alert")||(name==="updatenotification")||(name==="MMM-RandomPhoto")) {
 					module.show(self.config.wakeTransitionTime, {lockString: "Carousel"});
 				}
 			});
-			self.sleep = false;
+			self.sleeping = false;
 			self.sendSocketNotification("TURN_DISPLAY_ON");
 			Log.info("Waking up says Carousel.");
 			self.start();
-		} else if ((notification === "WAKE_UP")&&(self.sleep === false)) {
+		} else if ((notification === "WAKE_UP")&&(self.sleeping === false)) {
 			Log.info("Return to clock received.");
 			var oldModule = self.currentModule;
 			var newModule = "clock";
 			self.hideShowModules(oldModule, newModule);
 			self.currentModule = "clock";
-			self.cancelOneTimer = true;
+			self.wakeRotations = 0;
 			setTimeout(function() {self.rotateLoop();},self.config.moduleInterval*1000);
 		}
 
