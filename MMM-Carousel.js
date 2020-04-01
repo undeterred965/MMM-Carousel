@@ -92,14 +92,14 @@ Module.register("MMM-Carousel", {
 		if (notification === 'DOM_OBJECTS_CREATED') {
 			MM.getModules().exceptModule(self).enumerate(function(module) {
 				name = module.name;
-				if ((name!=="clock")&&(name!=="alert")&&(name!=="updatenotification")&&(name!=="MMM-RandomPhoto")) {
+				if ((name!=="clock")&&(name!=="alert")&&(name!=="MMM-RandomPhoto")) {
 					module.hide(0, {lockString: "Carousel"});
 				}
 			});
 		} else if ((notification === "WAKE_UP")&&(self.sleeping === true)) {
 			MM.getModules().exceptModule(self).enumerate(function(module) {
 				name = module.name;
-				if ((name==="clock")||(name==="alert")||(name==="updatenotification")||(name==="MMM-RandomPhoto")) {
+				if ((name==="clock")||(name==="alert")||(name==="MMM-RandomPhoto")) {
 					module.show(self.config.wakeTransitionTime, {lockString: "Carousel"});
 				}
 			});
