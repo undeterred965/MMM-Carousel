@@ -20,14 +20,14 @@ Module.register("MMM-Carousel", {
 		self.wakeRotations = 0;
 		self.sleeping = false;
 		self.currentModule = "clock";
-		setTimeout(function() {self.rotateLoop();},self.config.moduleInterval*1000);
+		self.timerId = setTimeout(function() {self.rotateLoop();},self.config.moduleInterval*1000);
 	},
 
 	rotateLoop: function() {
 		var self = this;
+		let oldModule = self.currentModule;
+		let newModule = "";
 		if (self.sleeping === true) return;
-		var oldModule = self.currentModule;
-		var newModule = "";
 		switch (oldModule) {
 			case "clock":
 				newModule = "currentweather";
@@ -52,7 +52,7 @@ Module.register("MMM-Carousel", {
 		if (self.wakeRotations === self.config.modulesBeforeSleep) {
 			self.sleepCarousel();
 		} else {
-			setTimeout(function() {self.rotateLoop();},self.config.moduleInterval*1000);
+			self.timerId = setTimeout(function() {self.rotateLoop();},self.config.moduleInterval*1000);
 		}
 	},
 	
@@ -70,7 +70,7 @@ Module.register("MMM-Carousel", {
 
 	hideShowModules: function(moduleToHide, moduleToShow) {
 		var self = this;
-		var modules = MM.getModules().exceptModule(self);
+		let modules = MM.getModules().exceptModule(self);
 		modules.enumerate(function(module) {
 			if (module.name === moduleToHide)
 				module.hide(self.config.transitionTime,function() {self.showModule(moduleToShow);}, {lockString: "Carousel"});
@@ -79,7 +79,7 @@ Module.register("MMM-Carousel", {
 
 	showModule: function(moduleToShow) {
 		var self = this;
-		var modules = MM.getModules().exceptModule(self);
+		let modules = MM.getModules().exceptModule(self);
 		modules.enumerate(function(module) {
 			if (module.name === moduleToShow)
 				module.show(self.config.transitionTime, {lockString: "Carousel"});
@@ -88,7 +88,7 @@ Module.register("MMM-Carousel", {
 
 	notificationReceived: function(notification, payload, sender) {
 		var self = this;
-		var name = "";
+		let name = "";
 		if (notification === 'DOM_OBJECTS_CREATED') {
 			MM.getModules().exceptModule(self).enumerate(function(module) {
 				name = module.name;
@@ -96,26 +96,30 @@ Module.register("MMM-Carousel", {
 					module.hide(0, {lockString: "Carousel"});
 				}
 			});
-		} else if ((notification === "WAKE_UP")&&(self.sleeping === true)) {
-			MM.getModules().exceptModule(self).enumerate(function(module) {
-				name = module.name;
-				if ((name==="clock")||(name==="alert")||(name==="MMM-RandomPhoto")) {
-					module.show(self.config.wakeTransitionTime, {lockString: "Carousel"});
-				}
-			});
-			self.sleeping = false;
-			self.sendSocketNotification("TURN_DISPLAY_ON");
-			Log.info("Waking up says Carousel.");
-			self.start();
-		} else if ((notification === "WAKE_UP")&&(self.sleeping === false)) {
-			Log.info("Return to clock received.");
-			var oldModule = self.currentModule;
-			var newModule = "clock";
-			self.hideShowModules(oldModule, newModule);
-			self.currentModule = "clock";
-			self.wakeRotations = 0;
-			self.sendNotification("CHANGE_BACKGROUND_IMAGE");
-			setTimeout(function() {self.rotateLoop();},self.config.moduleInterval*1000);
+		}
+		if (notification === "WAKE_UP") {
+			if (self.sleeping === true) {
+				MM.getModules().exceptModule(self).enumerate(function(module) {
+					name = module.name;
+					if ((name==="clock")||(name==="alert")||(name==="MMM-RandomPhoto")) {
+						module.show(self.config.wakeTransitionTime, {lockString: "Carousel"});
+					}
+				});
+				self.sleeping = false;
+				self.sendSocketNotification("TURN_DISPLAY_ON");
+				Log.info("Waking up says Carousel.");
+				self.start();
+			} else {
+				let oldModule = self.currentModule;
+				let newModule = "clock";
+				clearTimeout(self.timerId);
+				Log.info("Return to clock received.");
+				self.hideShowModules(oldModule, newModule);
+				self.currentModule = "clock";
+				self.wakeRotations = 0;
+				self.sendNotification("CHANGE_BACKGROUND_IMAGE");
+				self.timerId = setTimeout(function() {self.rotateLoop();},self.config.moduleInterval*1000);
+			}
 		}
 
 	},
