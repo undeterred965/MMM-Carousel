@@ -114,6 +114,7 @@ Module.register("MMM-Carousel", {
 			self.hideShowModules(oldModule, newModule);
 			self.currentModule = "clock";
 			self.wakeRotations = 0;
+			self.sendNotification("CHANGE_BACKGROUND_IMAGE");
 			setTimeout(function() {self.rotateLoop();},self.config.moduleInterval*1000);
 		}
 
